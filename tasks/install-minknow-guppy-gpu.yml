@@ -91,6 +91,11 @@
     enabled: true
   notify: restart guppyd
 
+- name: (Re)start minKNOW service
+  service:
+    name: minknow
+    state: restarted
+
 - name: touch installation_successful file
   file:
     path: "{{ ont_guppy_gpu_dir }}/installation_successful"
