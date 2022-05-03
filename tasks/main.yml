@@ -1,0 +1,32 @@
+---
+- include_tasks: setup-Debian.yml
+  when: ansible_os_family == 'Debian'
+
+- name: Install ont-guppy
+  package:
+    name: ont-guppy
+    state: present
+  notify: restart guppyd
+  ignore_errors: "{{ ansible_check_mode }}"
+  when: ont_install_minKNOW is false
+
+- name: Ensure guppyd is started and enabled at boot
+  service:
+    name: guppyd
+    state: started
+    enabled: true
+  ignore_errors: "{{ ansible_check_mode }}"
+
+- name: "Check whether this role has been completed previously"
+  stat:
+    path: "{{ ont_guppy_gpu_dir }}/installation_successful"
+  register: already_installed
+  when: ont_install_minKNOW is true
+
+- include_tasks: install-minknow-guppy-gpu.yml
+  when: ont_install_minKNOW is true and not already_installed.stat.exists
+
+- name: ""
+  debug:
+    msg: "Looks like this role has already been run previously. Delete {{ ont_guppy_gpu_dir }}/installation_successful to reinstall."
+  when: already_installed.stat.exists

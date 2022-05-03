@@ -1,0 +1,49 @@
+---
+- name: Ensure dependencies are installed
+  apt:
+    name:
+      - apt-transport-https
+      - ca-certificates
+    state: present
+
+- name: Set ansible_distribution to Ubuntu if running Pop!_OS
+  set_fact: ansible_distribution="Ubuntu"
+  when: ansible_distribution == "Pop!_OS"
+
+- name: Ensure additional dependencies are installed (on Ubuntu < 20.04 and any other systems)
+  apt:
+    name: gnupg2
+    state: present
+  when: ansible_distribution != 'Ubuntu' or ansible_distribution_version is version('20.04', '<')
+
+- name: Ensure additional dependencies are installed (on Ubuntu >= 20.04)
+  apt:
+    name: gnupg
+    state: present
+  when: ansible_distribution == 'Ubuntu' or ansible_distribution_version is version('20.04', '>=')
+
+- name: Add ONT apt key
+  apt_key:
+    url: "{{ ont_apt_repo_pub_key }}"
+    id: 7DC48F8EA3CEF634235DDADAAD9D09AF2EBBA5A8
+    state: present
+  register: add_repository_key
+  ignore_errors: "{{ ont_apt_ignore_key_error }}"
+
+- name: Ensure curl is present (on older systems without SNI)
+  package: name=curl state=present
+  when: add_repository_key is failed
+
+- name: Add ONT apt key (alternative for older systems without SNI)
+  shell: >
+    curl -sSL {{ ont_apt_repo_pub_key }} | apt-key add -
+  args:
+    warn: false
+  when: add_repository_key is failed
+
+- name: Add ONT apt repository
+  apt_repository:
+    repo: "{{ ont_apt_repo }}"
+    filename: nanoporetech.sources
+    state: present
+    update_cache: false
