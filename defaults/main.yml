@@ -2,7 +2,7 @@
 ont_install_minKNOW: true
 ont_guppy_gpu_dir: /opt/ont-guppy-gpu
 
-#ONT APT repository settings
+# ONT APT repository settings
 ont_repo_url: http://mirror.oxfordnanoportal.com/apt
 ont_apt_release_channel: stable non-free
 ont_apt_arch: amd64 # no choice but 64 bit
@@ -10,7 +10,7 @@ ont_apt_repo: "deb [arch={{ ont_apt_arch }}] {{ ont_repo_url }} {{ ansible_distr
 ont_apt_repo_pub_key: https://cdn.oxfordnanoportal.com/apt/ont-repo.pub
 ont_apt_ignore_key_error: true
 
-#Guppy basecall server settings
+# Guppy basecall server settings
 guppy_gpu_runners_per_device: 8
 guppy_chunks_per_runner: 80
 guppy_cfg: dna_r9.4.1_450bps_hac.cfg

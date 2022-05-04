@@ -46,4 +46,4 @@
     repo: "{{ ont_apt_repo }}"
     filename: nanoporetech.sources
     state: present
-    update_cache: false
+    update_cache: true

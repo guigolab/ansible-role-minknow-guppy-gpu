@@ -18,5 +18,4 @@ galaxy_info:
     - nanopore
     - minknow
     - guppy
-    - ONT
 dependencies: []
