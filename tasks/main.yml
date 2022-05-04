@@ -11,4 +11,4 @@
   when: ont_install_minKNOW is false
 
 - include_tasks: install-minknow-guppy-gpu.yml
-  when: ont_install_minKNOW is true and not already_installed.stat.exists
+  when: ont_install_minKNOW is true
