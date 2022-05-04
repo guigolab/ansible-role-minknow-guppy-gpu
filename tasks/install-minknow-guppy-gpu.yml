@@ -3,101 +3,46 @@
     name: minion-nc
     state: present
 
-- name: Identify guppy version
-  shell:
-    cmd: "/usr/bin/guppy_basecall_server --version | grep -o 'Version [0-9.]*' | grep -o '[0-9.]*'"
-  register: guppy_ver
-  changed_when: false
-
 - name: "Ensure {{ ont_guppy_gpu_dir }} exists"
   file:
     path: "{{ ont_guppy_gpu_dir }}"
     state: directory
     mode: 0755
 
+- name: "Check whether guppy GPU is already installed"
+  stat:
+    path: "{{ ont_guppy_gpu_dir }}/ont-guppy/bin"
+  register: guppy_installed
+
+- name: Identify guppy version
+  shell:
+    cmd: "/usr/bin/guppy_basecall_server --version | grep -o 'Version [0-9.]*' | grep -o '[0-9.]*'"
+  register: guppy_ver
+  changed_when: false
+
 - name: Check whether guppy GPU tarball already exists
   stat:
     path: "{{ ont_guppy_gpu_dir }}/ont-guppy_{{ guppy_ver.stdout }}_linux64.tar.gz"
   register: guppy_tarball
+  when: not guppy_installed.stat.exists
 
 - name: Download guppy GPU tarball
   get_url:
     url: "https://mirror.oxfordnanoportal.com/software/analysis/ont-guppy_{{ guppy_ver.stdout }}_linux64.tar.gz"
     dest: "{{ ont_guppy_gpu_dir }}"
-  when: not guppy_tarball.stat.exists
-
-- name: Check whether guppy GPU tarball has already been extracted
-  stat:
-    path: "{{ ont_guppy_gpu_dir }}/ont-guppy"
-  register: guppy_extracted
+  when: not guppy_installed.stat.exists and not guppy_tarball.stat.exists
 
 - name: Extract guppy GPU tarball
   unarchive:
     src: "{{ ont_guppy_gpu_dir }}/ont-guppy_{{ guppy_ver.stdout }}_linux64.tar.gz"
     remote_src: true
     dest: "{{ ont_guppy_gpu_dir }}/"
-  when: not guppy_extracted.stat.exists
-
-- name: Make sure minKNOW service isn't running
-  service:
-    name: minknow
-    state: stopped
-
-- name: Make sure guppyd service isn't running
-  service:
-    name: guppyd
-    state: stopped
-
-- name: Check whether any guppy_basecall_server processes are still running
-  shell: "ps -ef | grep -v grep | grep -w guppy_basecall_ | awk '{print $2}'"
-  register: running_processes
-
-- name: Kill running processes
-  shell: "kill {{ item }}"
-  with_items: "{{ running_processes.stdout_lines }}"
-
-- wait_for:
-    path: "/proc/{{ item }}/status"
-    state: absent
-    timeout: 20
-  with_items: "{{ running_processes.stdout_lines }}"
-  ignore_errors: true
-  register: killed_processes
-
-- name: Force kill stuck processes
-  shell: "kill -9 {{ item }}"
-  with_items: "{{ killed_processes.results | select('failed') | map(attribute='item') | list }}"
-
-- name: Clear /etc/systemd/system/guppyd.service.d/ folder
-  file:
-    path: /etc/systemd/system/guppyd.service.d
-    state: absent
-
-- name: Delete /etc/systemd/system/guppyd.service
-  file:
-    path: /etc/systemd/system/guppyd.service
-    state: absent
+  when: not guppy_installed.stat.exists
 
 - name: Copy guppyd.service file
   template:
     src: guppyd.service.j2
-    dest: "/etc/systemd/system/guppyd.service"
+    dest: /etc/systemd/system/guppyd.service
     mode: 0644
-
-- name: Reload systemd daemon
-  service:
-    name: guppyd
-    state: reloaded
-    enabled: true
-  notify: restart guppyd
-
-- name: (Re)start minKNOW service
-  service:
-    name: minknow
-    state: restarted
-
-- name: touch installation_successful file
-  file:
-    path: "{{ ont_guppy_gpu_dir }}/installation_successful"
-    state: touch
-    mode: 0644
+    backup: true
+  notify: Reload and restart guppy and minknow services

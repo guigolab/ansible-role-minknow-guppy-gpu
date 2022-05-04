@@ -1,4 +1,64 @@
 ---
-- name: restart guppyd
-  service: "name=guppyd state=restarted"
+- name: Make sure minKNOW service isn't running
+  service:
+    name: minknow
+    state: stopped
+  listen: Reload and restart guppy and minknow services
+
+- name: Make sure guppyd service isn't running
+  service:
+    name: guppyd
+    state: stopped
+  listen: Reload and restart guppy and minknow services
+
+- name: Check whether any guppy_basecall_server processes are still running
+  shell: "ps -ef | grep -v grep | grep -w guppy_basecall_ | awk '{print $2}'"
+  register: running_processes
+  listen: Reload and restart guppy and minknow services
+
+- name: Kill running processes
+  shell: "kill {{ item }}"
+  with_items: "{{ running_processes.stdout_lines }}"
+  listen: Reload and restart guppy and minknow services
+
+- wait_for:
+    path: "/proc/{{ item }}/status"
+    state: absent
+    timeout: 20
+  with_items: "{{ running_processes.stdout_lines }}"
+  ignore_errors: true
+  register: killed_processes
+  listen: Reload and restart guppy and minknow services
+
+- name: Force kill stuck processes
+  shell: "kill -9 {{ item }}"
+  with_items: "{{ killed_processes.results | select('failed') | map(attribute='item') | list }}"
+  listen: Reload and restart guppy and minknow services
+
+- name: Clear /etc/systemd/system/guppyd.service.d/ folder
+  file:
+    path: /etc/systemd/system/guppyd.service.d
+    state: absent
+  listen: Reload and restart guppy and minknow services
+
+- name: Reload systemd daemon
+  service:
+    name: guppyd
+    state: reloaded
+    enabled: true
+  listen: Reload and restart guppy and minknow services
+
+- name: (Re)start guppyd service
+  service:
+    name: guppyd
+    state: started
+    enabled: true
   ignore_errors: "{{ ansible_check_mode }}"
+  listen: Reload and restart guppy and minknow services
+
+- name: (Re)start minKNOW service
+  service:
+    name: minknow
+    state: restarted
+  ignore_errors: "{{ ansible_check_mode }}"
+  listen: Reload and restart guppy and minknow services
