@@ -1,4 +1,4 @@
-minknow-guppy-gpu
+minknow_guppy_gpu
 =========
 
 This Ansible role sets up MinKNOW from Oxford Nanopore Technologies with live GPU basecalling support from Guppy. Alternatively only installs Guppy with GPU support without installing MinKNOW. Currently only supports Debian/Ubuntu because that's what I needed, but feel free to contribute. Installation is performed in much the same way as ONT recommends according to [this guide](https://community.nanoporetech.com/docs/prepare/library_prep_protocols/Guppy-protocol/v/gpb_2003_v1_revae_14dec2018/installing-gpu-version-of-guppy-with-minknow-for-minion) (requires login, corporate BS).
@@ -12,7 +12,7 @@ Installation
 ----------------
 Install from Ansible Galaxy with
 ```
-ansible-galaxy install kasperskytte.minknow-guppy-gpu
+ansible-galaxy install kasperskytte.minknow_guppy_gpu
 ```
 Role Variables
 --------------
@@ -69,7 +69,7 @@ Including an example of how to use your role (for instance, with variables passe
 ```
 - hosts: servers
   roles:
-    - kasperskytte.minknow-guppy-gpu
+    - kasperskytte.minknow_guppy_gpu
   vars:
     - ont_install_minKNOW: true
     - guppy_cfg: dna_r9.4.1_450bps_hac.cfg

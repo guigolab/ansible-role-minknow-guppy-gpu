@@ -2,4 +2,4 @@
 - hosts: localhost
   remote_user: root
   roles:
-    - minknow-guppy-gpu
+    - minknow_guppy_gpu

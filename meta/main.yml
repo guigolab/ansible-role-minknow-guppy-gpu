@@ -1,5 +1,5 @@
 galaxy_info:
-  role_name: minknow-guppy-gpu
+  role_name: minknow_guppy_gpu
   author: Kasper Skytte Andersen
   description: This Ansible role sets up MinKNOW from Oxford Nanopore Technologies with live GPU basecalling support from Guppy. Alternatively only installs Guppy with GPU support without installing MinKNOW.
   license: GPL-2.0-or-later
