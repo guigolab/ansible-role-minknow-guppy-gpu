@@ -1,19 +1,4 @@
 ---
-- name: Assert OS is Debian/Ubuntu
-  assert:
-    that:
-      - ansible_os_family == 'Debian'
-      #- ansible_distribution
-    fail_msg: "OS is not Debian based"
-
-- name: ""
-  debug:
-    msg: "{{ ansible_distribution }}"
-
-- name: "end play"
-  meta: end_play
-    
-
 - include_tasks: setup-Debian.yml
   when: ansible_os_family == 'Debian'
 
