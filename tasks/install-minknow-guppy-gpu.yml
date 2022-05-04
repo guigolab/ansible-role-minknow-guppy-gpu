@@ -9,9 +9,9 @@
     state: directory
     mode: 0755
 
-- name: "Check whether guppy GPU is already installed"
+- name: "Check whether guppy GPU seems to be already installed"
   stat:
-    path: "{{ ont_guppy_gpu_dir }}/ont-guppy/bin"
+    path: "{{ ont_guppy_gpu_dir }}/ont-guppy/bin/guppy_basecall_server"
   register: guppy_installed
 
 - name: Identify guppy version
@@ -46,3 +46,20 @@
     mode: 0644
     backup: true
   notify: Reload and restart guppy and minknow services
+
+- name: Create symlinks to binaries
+  file:
+    src: "{{ ont_guppy_gpu_dir }}/ont-guppy/bin/{{ item }}"
+    dest: "/usr/bin/{{ item }}"
+    state: link
+  with_items:
+    - autoconfigure_guppy_server.py
+    - bam_convert
+    - guppy_aligner
+    - guppy_barcoder
+    - guppy_basecall_client
+    - guppy_basecaller
+    - guppy_basecaller_duplex
+    - guppy_basecaller_supervisor
+    - guppy_basecall_server
+    - minimap2
