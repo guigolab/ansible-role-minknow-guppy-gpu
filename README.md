@@ -17,23 +17,17 @@ ansible-galaxy install kasperskytte.minknow_guppy_gpu
 Role Variables
 --------------
 
-Defaults can be found in `defaults/main.yml`
+Defaults can be found in `vars/main.yml`
 
 - `ont_install_minKNOW`: Whether to also install MinKNOW or not
-- `ont_guppy_gpu_dir`: Location the GPU version of Guppy will be installed
+- `ont_guppy_gpu_dir`: Location where the GPU version of Guppy will be installed
 
-- `ont_repo_url`: ONT APT repository URL
-- `ont_apt_release_channel`: Release channel
-- `ont_apt_arch`: Architechture for APT repo, no choice but 64 bit really
-- `ont_apt_repo`: Exact line added to the APT sources.list file
-- `ont_apt_repo_pub_key`: Public key for the ONT APT repository
-- `ont_apt_ignore_key_error`: Whether to use an alternative way to add repo pub key
-
-- `guppy_cfg`: Which Guppy basecall configuration file to use
-
-The following options are passed on directly to the guppy_basecall_server.
+If `ont_install_minKNOW` is `true` the following options are passed on directly to the guppy_basecall_server command in the system service unit.
 - `guppy_gpu_runners_per_device`
 - `guppy_chunks_per_runner`
+- `guppy_cfg`: Which Guppy basecall configuration file to use
+
+Other internal variables that don't require any adjustments by the end user is available in `defaults/main.yml`.
 
 ### **Setting optimal Guppy parameters**
 The optimal settings of the last two options depends on your hardware. ONT has written the following about it ([source](https://community.nanoporetech.com/docs/prepare/library_prep_protocols/Guppy-protocol/v/gpb_2003_v1_revae_14dec2018/linux-guppy)):
@@ -72,10 +66,10 @@ Including an example of how to use your role (for instance, with variables passe
   roles:
     - kasperskytte.minknow_guppy_gpu
   vars:
-    - ont_install_minKNOW: true
-    - guppy_cfg: dna_r9.4.1_450bps_hac.cfg
-    - guppy_gpu_runners_per_device: 8
-    - guppy_chunks_per_runner: 80
+    ont_install_minKNOW: true
+    guppy_cfg: dna_r9.4.1_450bps_hac.cfg
+    guppy_gpu_runners_per_device: 8
+    guppy_chunks_per_runner: 80
 ```
 License
 -------
