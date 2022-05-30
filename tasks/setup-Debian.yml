@@ -26,7 +26,7 @@
   apt_key:
     url: "{{ ont_apt_repo_pub_key }}"
     id: 7DC48F8EA3CEF634235DDADAAD9D09AF2EBBA5A8
-    keyring: "/usr/share/keyrings/{{ ont_apt_repo_filename }}-archive-keyring.gpg"
+    keyring: "/usr/share/keyrings/{{ ont_apt_repo_name }}-archive-keyring.gpg"
     state: present
   register: add_repository_key
   ignore_errors: "{{ ont_apt_ignore_key_error }}"
@@ -45,15 +45,15 @@
 - name: Add ONT apt repository
   apt_repository:
     repo: "deb [arch={{ ont_apt_arch }}] {{ ont_apt_repo_url }} {{ ansible_distribution_release }}-{{ ont_apt_release_channel }}"
-    filename: nanoporetech.sources
+    filename: "{{ ont_apt_repo_name }}"
     state: present
     update_cache: true
   when: add_repository_key is failed
 
 - name: Add ONT apt repository
   apt_repository:
-    repo: "deb [arch={{ ont_apt_arch }} signed-by=/usr/share/keyrings/{{ ont_apt_repo_filename }}-archive-keyring.gpg] {{ ont_apt_repo_url }} {{ ansible_distribution_release }}-{{ ont_apt_release_channel }}"
-    filename: nanoporetech.sources
+    repo: "deb [arch={{ ont_apt_arch }} signed-by=/usr/share/keyrings/{{ ont_apt_repo_name }}-archive-keyring.gpg] {{ ont_apt_repo_url }} {{ ansible_distribution_release }}-{{ ont_apt_release_channel }}"
+    filename: "{{ ont_apt_repo_name }}"
     state: present
     update_cache: true
   when: add_repository_key is not failed
