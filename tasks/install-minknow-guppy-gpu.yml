@@ -1,7 +1,7 @@
 - name: Install minion-nc
   package:
     name: minion-nc
-    state: present
+    state: latest
 
 - name: "Ensure {{ ont_guppy_gpu_dir }} exists"
   file:
@@ -9,35 +9,48 @@
     state: directory
     mode: 0755
 
-- name: "Check whether guppy GPU seems to be already installed"
-  stat:
-    path: "{{ ont_guppy_gpu_dir }}/ont-guppy/bin/guppy_basecall_server"
-  register: guppy_installed
-
-- name: Identify guppy version
+- name: Identify version of guppy installed from APT
   shell:
-    cmd: "/usr/bin/guppy_basecall_server --version | grep -o 'Version [0-9.]*' | grep -o '[0-9.]*'"
-  register: guppy_ver
+    cmd: "/opt/ont/guppy/bin/guppy_basecall_server --version | grep -o 'Version [0-9.]*' | grep -o '[0-9.]*'"
+  register: guppy_apt_ver
   changed_when: false
+
+- name: Identify version of guppy GPU (if already installed)
+  shell:
+    cmd: "{{ ont_guppy_gpu_dir }}/ont-guppy/bin/guppy_basecall_server --version | grep -o 'Version [0-9.]*' | grep -o '[0-9.]*'"
+  register: guppy_gpu_ver
+  changed_when: false
+  ignore_errors: true
+
+- name: Check whether versions differ
+  debug:
+    msg: "The version of guppy installed from APT ({{ guppy_apt_ver.stdout }}) differs from that of guppy GPU ({{ guppy_gpu_ver.stdout }}). Will (re)install guppy GPU."
+  when: guppy_gpu_ver.stdout != guppy_apt_ver.stdout
+
+- name: Remove previous guppy GPU installation
+  file:
+    path: "{{ ont_guppy_gpu_dir }}/ont-guppy/"
+    state: absent
+  when: guppy_gpu_ver.stdout != guppy_apt_ver.stdout
 
 - name: Check whether guppy GPU tarball already exists
   stat:
-    path: "{{ ont_guppy_gpu_dir }}/ont-guppy_{{ guppy_ver.stdout }}_linux64.tar.gz"
+    path: "{{ ont_guppy_gpu_dir }}/ont-guppy_{{ guppy_apt_ver.stdout }}_linux64.tar.gz"
   register: guppy_tarball
-  when: not guppy_installed.stat.exists
+  when: guppy_gpu_ver.stdout != guppy_apt_ver.stdout
 
 - name: Download guppy GPU tarball
   get_url:
-    url: "https://mirror.oxfordnanoportal.com/software/analysis/ont-guppy_{{ guppy_ver.stdout }}_linux64.tar.gz"
+    url: "https://mirror.oxfordnanoportal.com/software/analysis/ont-guppy_{{ guppy_apt_ver.stdout }}_linux64.tar.gz"
     dest: "{{ ont_guppy_gpu_dir }}"
-  when: not guppy_installed.stat.exists and not guppy_tarball.stat.exists
+  when: guppy_gpu_ver.stdout != guppy_apt_ver.stdout and not guppy_tarball.stat.exists
 
 - name: Extract guppy GPU tarball
   unarchive:
-    src: "{{ ont_guppy_gpu_dir }}/ont-guppy_{{ guppy_ver.stdout }}_linux64.tar.gz"
+    src: "{{ ont_guppy_gpu_dir }}/ont-guppy_{{ guppy_apt_ver.stdout }}_linux64.tar.gz"
     remote_src: true
     dest: "{{ ont_guppy_gpu_dir }}/"
-  when: not guppy_installed.stat.exists
+  when: guppy_gpu_ver.stdout != guppy_apt_ver.stdout
 
 - name: Copy guppyd.service file
   template:
@@ -47,13 +60,12 @@
     backup: true
   notify: Reload and restart guppy and minknow services
 
-- name: Create symlinks to binaries
+- name: Create symlinks to binaries at /usr/bin
   file:
     src: "{{ ont_guppy_gpu_dir }}/ont-guppy/bin/{{ item }}"
     dest: "/usr/bin/{{ item }}"
     state: link
   with_items:
-    - autoconfigure_guppy_server.py
     - bam_convert
     - guppy_aligner
     - guppy_barcoder
