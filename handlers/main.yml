@@ -1,13 +1,13 @@
 ---
 - name: Make sure minKNOW service isn't running
   service:
-    name: minknow
+    name: "{{ ont_guppy_service }}"
     state: stopped
   listen: Reload and restart guppy and minknow services
 
 - name: Make sure guppyd service isn't running
   service:
-    name: guppyd
+    name: "{{ ont_guppy_service }}"
     state: stopped
   listen: Reload and restart guppy and minknow services
 
@@ -37,27 +37,27 @@
 
 - name: Clear /etc/systemd/system/guppyd.service.d/ folder
   file:
-    path: /etc/systemd/system/guppyd.service.d
+    path: /etc/systemd/system/{{ ont_guppy_service }}.service.d
     state: absent
   listen: Reload and restart guppy and minknow services
 
 - name: Reload systemd daemon
   service:
-    name: guppyd
+    name: "{{ ont_guppy_service }}"
     state: reloaded
-    enabled: true
+    daemon_reload: yes
   listen: Reload and restart guppy and minknow services
 
 - name: Enable guppyd service
   service:
-    name: guppyd
+    name: "{{ ont_guppy_service }}"
     enabled: true
   ignore_errors: "{{ ansible_check_mode }}"
   listen: Reload and restart guppy and minknow services
 
 - name: (Re)start guppyd service
   service:
-    name: guppyd
+    name: "{{ ont_guppy_service }}"
     state: restarted
   ignore_errors: "{{ ansible_check_mode }}"
   listen: Reload and restart guppy and minknow services
